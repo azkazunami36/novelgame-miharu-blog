@@ -1,76 +1,12 @@
 import express from "express";
-
 const app = express();
 app.use(express.json()); // JSONボディパーサー追加
-
-const status: {
-    /** 部屋名 */
-    roomName: string;
-    /** 部屋ID */
-    roomID: string;
-    /** 参加しているユーザー */
-    users: {
-        /** ユーザー名 */
-        name: string;
-        /** 最終操作時間 */
-        lastOperationTime: number;
-    }[];
-    /** 部屋作成時間 */
-    roomCreateTime: number;
-    /** 最終操作時間 */
-    lastOperationTime: number;
-    /** ゲームが終了したかどうか */
-    finished: boolean;
-    /** ステータスJSON */
-    statusJSON: {
-        /** 現在のページ */
-        page: number;
-        /** 最大ページ */
-        maxPage: number;
-        /** 制限時間 */
-        timeLimit: number;
-        /** ゲーム終了時にどのプレイヤーが書いたかを見れるかどうか */
-        finishedShowUserName: boolean;
-        /** 小説テキスト */
-        novel: {
-            /** 誰が書いたか */
-            userName: string;
-            /** タイトル */
-            title: string;
-            /** 本文 */
-            novel: string;
-            /** ページ */
-            page: number;
-        }[];
-        /** タイトルの情報 */
-        titleInfo: {
-            /** タイトル */
-            title: string;
-            /** 誰が書いたか */
-            userName: string;
-        }[];
-    }
-}[] = [];
-
+const status = [];
 // expressリクエスト処理時の日本語ログを追加
 app.post("*", (req, res) => {
     console.log("リクエストを受信しました。:", req.body);
     try {
-        const request: {
-            /** 部屋名 */
-            roomName?: string;
-            /** 部屋ID */
-            roomID?: string;
-            /** ユーザー名 */
-            userName?: string;
-            /** ステータスJSON */
-            statusJSON?: string;
-            /** 小説のタイトル */
-            title?: string;
-            /** 小説の本文 */
-            novel?: string;
-        } = req.body;
-
+        const request = req.body;
         // 部屋ID、ユーザー名、タイトル、本文が渡された場合：小説更新処理
         if (request.roomID && request.userName && request.title && request.novel) {
             console.log("ルーム", request.roomID, "における小説更新処理を開始。");
@@ -80,7 +16,8 @@ app.post("*", (req, res) => {
                 if (novelEntry && novelEntry.page === room.statusJSON.page) {
                     novelEntry.novel = request.novel;
                     console.log("ユーザー", request.userName, "の既存小説エントリを更新しました。");
-                } else {
+                }
+                else {
                     room.statusJSON.novel.push({
                         userName: request.userName,
                         title: request.title,
@@ -92,7 +29,8 @@ app.post("*", (req, res) => {
                 room.lastOperationTime = Date.now();
                 res.status(200);
                 res.end();
-            } else {
+            }
+            else {
                 console.log("小説更新のためのルームが見つかりませんでした。:", request.roomID);
                 res.status(404);
                 res.send("Not Found");
@@ -111,7 +49,8 @@ app.post("*", (req, res) => {
                 console.log("ユーザー", request.userName, "のタイトル作成をマークしました。");
                 res.status(200);
                 res.end();
-            } else {
+            }
+            else {
                 console.log("タイトルマークのためのルームが見つかりませんでした。:", request.roomID);
                 res.status(404);
                 res.send("Not Found");
@@ -128,12 +67,14 @@ app.post("*", (req, res) => {
                     console.log("ルーム", request.roomID, "のステータスを更新しました。");
                     res.status(200);
                     res.end();
-                } else {
+                }
+                else {
                     console.log("ステータス更新のためのルームが見つかりませんでした。:", request.roomID);
                     res.status(404);
                     res.send("Not Found");
                 }
-            } catch (e) {
+            }
+            catch (e) {
                 console.error("statusJSONの解析エラー。:", e);
                 res.status(400);
                 res.send("Bad Request");
@@ -152,7 +93,8 @@ app.post("*", (req, res) => {
                             user.lastOperationTime = Date.now();
                             console.log("ユーザー", request.userName, "の最終操作時間を更新しました。");
                         }
-                    } else {
+                    }
+                    else {
                         room.users.push({
                             name: request.userName,
                             lastOperationTime: Date.now(),
@@ -164,7 +106,8 @@ app.post("*", (req, res) => {
                 res.status(200);
                 console.log("ルーム", request.roomID, "のstatusJSONを返却します。");
                 res.send(JSON.stringify(room.statusJSON));
-            } else {
+            }
+            else {
                 console.log("ルーム取得のためのルームが見つかりませんでした。:", request.roomID);
                 res.status(404);
                 res.send("Not Found");
@@ -173,7 +116,7 @@ app.post("*", (req, res) => {
         // 部屋名が渡された場合：ルーム作成処理
         else if (request.roomName) {
             console.log("ルーム名", request.roomName, "によりルーム作成処理を開始。");
-            let roomID: string;
+            let roomID;
             do {
                 roomID = Math.floor(Math.random() * 10000).toString().padStart(4, "0")
                     + "-" + Math.floor(Math.random() * 10000).toString().padStart(4, "0")
@@ -198,22 +141,22 @@ app.post("*", (req, res) => {
             console.log("新しいルームを作成しました。ID。:", roomID);
             res.status(200);
             res.send(roomID);
-        } else {
+        }
+        else {
             console.log("不正なリクエストを受信しました。");
             res.status(400);
             res.send("Bad Request");
         }
-    } catch (e) {
+    }
+    catch (e) {
         console.error("内部サーバーエラー。:", e);
         res.status(500);
         res.send("Internal Server Error");
     }
 });
-
 app.listen(3000, () => {
     console.log("ポート3000でサーバーが起動中です。");
 });
-
 // 5秒ごとにチェックする処理
 setInterval(() => {
     const now = Date.now();
@@ -224,7 +167,8 @@ setInterval(() => {
         if (now - room.lastOperationTime > 10 * 60 * 1000) {
             console.log("非アクティブのためルームを削除します。:", room.roomID);
             status.splice(i, 1);
-        } else {
+        }
+        else {
             // 各ルーム内のユーザーの最終操作時間が5秒以上経過している場合、ユーザーを削除
             for (let j = room.users.length - 1; j >= 0; j--) {
                 if (now - room.users[j].lastOperationTime > 5 * 1000) {
